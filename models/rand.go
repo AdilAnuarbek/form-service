@@ -1,27 +1,18 @@
 package models
 
 import (
-	"crypto/rand"
-	"encoding/base64"
-	"fmt"
+	"math/rand"
+	"time"
 )
 
-func Bytes(n int) ([]byte, error) {
-	b := make([]byte, n)
-	nRead, err := rand.Read(b)
-	if err != nil {
-		return nil, fmt.Errorf("bytes: %w", err)
-	}
-	if nRead < n {
-		return nil, fmt.Errorf("bytes: didn't read enough random bytes")
-	}
-	return b, nil
-}
+func RandomString(n int) string {
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-func String(n int) (string, error) {
-	b, err := Bytes(n)
-	if err != nil {
-		return "", fmt.Errorf("string: %w", err)
+	var seededRand *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = charset[seededRand.Intn(len(charset))]
 	}
-	return base64.URLEncoding.EncodeToString(b), nil
+	return string(b)
 }

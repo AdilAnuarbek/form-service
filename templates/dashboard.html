@@ -1,0 +1,15 @@
+{{template "header" .}}
+<div>
+    <form action="/create-form" method="post">
+        <div>
+            <label>Form Name:</label>
+        </div>
+        <div>
+            <textarea name="form-name" id="form-name"></textarea>
+        </div>
+        <div>
+            <button type="submit">Create new form</button>
+        </div>
+    </form>
+</div>
+{{template "footer" .}}

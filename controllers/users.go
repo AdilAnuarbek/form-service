@@ -21,18 +21,21 @@ type UserMiddleware struct {
 type Users struct {
 	Templates struct {
 		Signup Template
+		Signin Template
 	}
 	UserService *models.UserService
-	// SessionService *models.SessionService
-	Session *sessions.CookieStore
+	Session     *sessions.CookieStore
 }
 
 func (u Users) SignUp(w http.ResponseWriter, r *http.Request) { // GET
-
-	u.Templates.Signup.Execute(w, r, nil)
+	var data struct {
+		Email string
+	}
+	data.Email = r.FormValue("email")
+	u.Templates.Signup.Execute(w, r, data)
 }
 
-func (u Users) PostSignUp(w http.ResponseWriter, r *http.Request) { // POST
+func (u Users) SignUpHandler(w http.ResponseWriter, r *http.Request) { // POST
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 	nu := models.NewUser{
@@ -55,10 +58,55 @@ func (u Users) PostSignUp(w http.ResponseWriter, r *http.Request) { // POST
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	http.Redirect(w, r, "/", http.StatusFound) // TODO: change to "/"
 }
 
-func (umw UserMiddleware) Authenticate(next http.Handler) http.Handler {
+func (u Users) SignIn(w http.ResponseWriter, r *http.Request) { // GET
+	var data struct {
+		Email string
+	}
+	data.Email = r.FormValue("email")
+	u.Templates.Signin.Execute(w, r, data)
+}
+
+func (u Users) SignInHandler(w http.ResponseWriter, r *http.Request) {
+	email := r.FormValue("email")
+	password := r.FormValue("password")
+
+	user, err := u.UserService.Authenticate(email, password)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	session, _ := u.Session.Get(r, "form-service")
+	session.Values["userID"] = user.ID
+
+	err = sessions.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/dashboard", http.StatusFound)
+}
+
+func (u Users) SignOutHandler(w http.ResponseWriter, r *http.Request) {
+	session, _ := u.Session.Get(r, "form-service")
+
+	delete(session.Values, "userID")
+	err := sessions.Save(r, w)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusFound)
+}
+
+// User Middlewares
+func (umw UserMiddleware) SetUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, _ := umw.Session.Get(r, "form-service")
 		userID, ok := session.Values["userID"].(int)
@@ -73,7 +121,6 @@ func (umw UserMiddleware) Authenticate(next http.Handler) http.Handler {
 			return
 		}
 		ctx := context.WithValue(r.Context(), ContextKeyUser, user)
-		fmt.Println("HELLO")
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }

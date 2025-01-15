@@ -45,9 +45,14 @@ func run(cfg config) error {
 	userService := &models.UserService{
 		DB: db,
 	}
+	formService := &models.FormService{
+		DB: db,
+	}
 
 	// Controllers
-	handlersC := controllers.Handlers{}
+	handlersC := controllers.Handlers{
+		FormService: formService,
+	}
 	usersC := controllers.Users{
 		UserService: userService,
 		Session:     store,
@@ -58,15 +63,26 @@ func run(cfg config) error {
 	}
 
 	r := chi.NewRouter()
-	r.Use(umw.Authenticate)
-	handlersC.Templates.Index = views.Must(views.ParseFS(templates.FS, "home.html", "tailwind.html"))
-	handlersC.Templates.Contact = views.Must(views.ParseFS(templates.FS, "contact.html", "tailwind.html"))
-	r.Get("/", handlersC.IndexHandler)
-	r.Get("/contact", handlersC.ContactHandler)
+	r.Use(umw.SetUser)
+	// Home and contact pages
+	r.Get("/", controllers.StaticHandler(views.Must(views.ParseFS(templates.FS, "home.html", "tailwind.html"))))
+	r.Get("/contact", controllers.StaticHandler(views.Must(views.ParseFS(templates.FS, "contact.html", "tailwind.html"))))
 
+	// Sign up and Sign in
 	usersC.Templates.Signup = views.Must(views.ParseFS(templates.FS, "signup.html", "tailwind.html"))
 	r.Get("/signup", usersC.SignUp)
-	r.Post("/signup", usersC.PostSignUp)
+	r.Post("/signup", usersC.SignUpHandler)
+
+	usersC.Templates.Signin = views.Must(views.ParseFS(templates.FS, "signin.html", "tailwind.html"))
+	r.Get("/signin", usersC.SignIn)
+	r.Post("/signin", usersC.SignInHandler)
+	r.Post("/signout", usersC.SignOutHandler)
+
+	// Dashboard
+	r.Get("/dashboard", controllers.StaticHandler(views.Must(views.ParseFS(templates.FS, "dashboard.html", "tailwind.html"))))
+	r.Post("/create-form", handlersC.PostDashboardHandler)
+	// handlersC.Templates.ViewForm = views.Must(views.ParseFS(templates.FS, "viewform.html", "tailwind.html"))
+	// r.Get("/{formSTR}", handlersC.ViewFormData)
 
 	fmt.Println("Starting the server on 8080...")
 	return http.ListenAndServe(":8080", r)
