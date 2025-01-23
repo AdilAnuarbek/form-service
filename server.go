@@ -80,9 +80,11 @@ func run(cfg config) error {
 
 	// Dashboard
 	r.Get("/dashboard", controllers.StaticHandler(views.Must(views.ParseFS(templates.FS, "dashboard.html", "tailwind.html"))))
+	handlersC.Templates.Profile = views.Must(views.ParseFS(templates.FS, "profile.html", "tailwind.html"))
+	r.Get("/profile", handlersC.ProfileHandler)
 	r.Post("/create-form", handlersC.PostDashboardHandler)
-	// handlersC.Templates.ViewForm = views.Must(views.ParseFS(templates.FS, "viewform.html", "tailwind.html"))
-	// r.Get("/{formSTR}", handlersC.ViewFormData)
+	handlersC.Templates.ViewForm = views.Must(views.ParseFS(templates.FS, "viewform.html", "tailwind.html"))
+	r.Get("/form/{formSTR}", handlersC.ViewFormData)
 
 	fmt.Println("Starting the server on 8080...")
 	return http.ListenAndServe(":8080", r)

@@ -22,7 +22,7 @@
             <!-- Right Side: Dashboard/Profile/Sign Out -->
             <div class="flex items-center space-x-4">
                 <a class="text-lg font-semibold hover:text-green-100" href="/dashboard">Dashboard</a>
-                <a class="text-lg font-semibold hover:text-green-100" href="/profile">{{.Email}}</a>
+                <a class="text-lg font-semibold hover:text-green-100" href="/profile">{{userEmail}}</a>
                 <form action="/signout" method="post" class="inline">
                     <button type="submit" class="text-lg font-semibold hover:text-green-100">Sign out</button>
                 </form>

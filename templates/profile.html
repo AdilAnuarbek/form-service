@@ -1,0 +1,12 @@
+{{template "header" .}}
+
+{{range .Forms}}
+<div>
+    Form name: <a href="/form/{{.FormSTR}}">{{.FormName}}</a>
+</div>
+<div>
+    Form id: {{.FormSTR}}
+</div>
+{{end}}
+
+{{template "footer" .}}

@@ -34,6 +34,13 @@ func (t Template) Execute(w http.ResponseWriter, r *http.Request, data any, errs
 			}
 			return user
 		},
+		"userEmail": func() string {
+			user, ok := r.Context().Value(controllers.ContextKeyUser).(*models.User)
+			if !ok {
+				return ""
+			}
+			return user.Email
+		},
 	})
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -70,6 +77,9 @@ func ParseFS(fs fs.FS, patterns ...string) (Template, error) {
 	tpl := template.New(filepath.Base(patterns[0]))
 	tpl = tpl.Funcs(template.FuncMap{
 		"userSignedin": func() (template.HTML, error) {
+			return "", fmt.Errorf("currentUser not implemented")
+		},
+		"userEmail": func() (template.HTML, error) {
 			return "", fmt.Errorf("currentUser not implemented")
 		},
 	})
